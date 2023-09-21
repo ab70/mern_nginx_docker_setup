@@ -1,0 +1,43 @@
+version: '3'
+# inside services it has to be all the services here i have only two backend and database
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node-api
+    restart: always
+    environment:
+      - Mongoose_connect=mongodb+srv://mongodbUrl
+      - PORT=3000
+      - SECRET_KEY=ab123
+    volumes:
+      - ./backend:/app/backend
+      - ./backend/public/amendmentDoc:/app/backend/public/amendmentDoc
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      - mern-network
+
+  database:
+    image: mongo
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    volumes:
+      # - /home/ab/Documents/dev/mongo-backup:/data/db
+      - /lenden-backup-db/mongo-backup:/data/db
+      # this line is to execute a script so that initial mongodb admin users and roles are created, 
+      # it must be executed otherwise it wont allow to run query
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro 
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admindb
+      - MONGO_INITDB_ROOT_PASSWORD=admin123db
+    networks:
+      - mern-network
+
+networks:
+  mern-network:
+    driver: bridge
